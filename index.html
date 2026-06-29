@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quarterly Reset & Realign</title>
+<style>
+  :root{
+    --ink:#15171C;
+    --ink-2:#1E2129;
+    --paper:#F7F5F1;
+    --paper-dim:#E9E6DF;
+    --pulse:#FF4D2E;
+    --pulse-dim:#FF4D2E22;
+    --slate:#9A9EA8;
+    --slate-dark:#6B6F78;
+    --ok:#3DDC84;
+    --ok-dim:#3DDC8422;
+    --warn:#FFC542;
+    --warn-dim:#FFC54222;
+    --radius:14px;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+
+  body{
+    background:var(--ink);
+    color:var(--paper);
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+    padding-bottom:80px;
+  }
+
+  @font-face{
+    font-family:'Inter';
+    src:local('Inter');
+  }
+
+  .display{
+    font-family:'Oswald','Arial Narrow',sans-serif;
+    font-weight:700;
+    letter-spacing:0.01em;
+    text-transform:uppercase;
+  }
+
+  .mono{
+    font-family:'JetBrains Mono','Courier New',monospace;
+  }
+
+  /* ---------- DIAL (signature element) ---------- */
+  .dial-wrap{
+    position:fixed;
+    top:18px;
+    right:18px;
+    z-index:50;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background:rgba(21,23,28,0.85);
+    backdrop-filter:blur(8px);
+    border:1px solid #2A2D36;
+    border-radius:999px;
+    padding:8px 14px 8px 8px;
+  }
+  .dial{
+    width:46px;
+    height:46px;
+    position:relative;
+    flex-shrink:0;
+  }
+  .dial svg{
+    width:46px;
+    height:46px;
+    transform:rotate(-90deg);
+  }
+  .dial-track{
+    fill:none;
+    stroke:#2A2D36;
+    stroke-width:4;
+  }
+  .dial-fill{
+    fill:none;
+    stroke:var(--pulse);
+    stroke-width:4;
+    stroke-linecap:round;
+    transition:stroke-dasharray 0.4s ease;
+  }
+  .dial-pct{
+    position:absolute;
+    top:0;left:0;width:100%;height:100%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:11px;
+    font-weight:700;
+    font-family:'JetBrains Mono',monospace;
+    color:var(--paper);
+  }
+  .dial-label{
+    font-size:10px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--slate);
+    line-height:1.3;
+  }
+  .dial-label strong{
+    display:block;
+    color:var(--paper);
+    font-size:11px;
+  }
+
+  /* ---------- HERO ---------- */
+  .hero{
+    max-width:680px;
+    margin:0 auto;
+    padding:90px 24px 50px;
+  }
+  .eyebrow{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    letter-spacing:0.14em;
+    color:var(--pulse);
+    text-transform:uppercase;
+    margin-bottom:18px;
+  }
+  .eyebrow::before{
+    content:'';
+    width:8px;height:8px;
+    border-radius:50%;
+    background:var(--pulse);
+    box-shadow:0 0 0 4px var(--pulse-dim);
+  }
+  .hero h1{
+    font-size:clamp(34px,6vw,54px);
+    line-height:1.02;
+    margin:0 0 20px;
+  }
+  .hero h1 .accent{ color:var(--pulse); }
+  .hero p{
+    font-size:17px;
+    line-height:1.6;
+    color:#C9CAD1;
+    max-width:520px;
+    margin:0;
+  }
+
+  /* ---------- FORM SHELL ---------- */
+  form{
+    max-width:680px;
+    margin:0 auto;
+    padding:0 24px;
+  }
+
+  .section{
+    background:var(--paper);
+    color:var(--ink);
+    border-radius:var(--radius);
+    padding:36px 32px;
+    margin-bottom:24px;
+    position:relative;
+    border:1px solid #00000010;
+  }
+
+  .section-head{
+    display:flex;
+    align-items:baseline;
+    gap:14px;
+    margin-bottom:8px;
+  }
+  .section-num{
+    font-family:'JetBrains Mono',monospace;
+    font-size:13px;
+    font-weight:700;
+    color:var(--pulse);
+    background:var(--pulse-dim);
+    border-radius:6px;
+    padding:3px 8px;
+    flex-shrink:0;
+  }
+  .section h2{
+    font-size:22px;
+    margin:0;
+    letter-spacing:0.01em;
+  }
+  .section-sub{
+    color:var(--slate-dark);
+    font-size:14.5px;
+    line-height:1.55;
+    margin:6px 0 28px;
+  }
+
+  .field{ margin-bottom:24px; }
+  .field:last-child{ margin-bottom:0; }
+
+  label.q{
+    display:block;
+    font-size:15px;
+    font-weight:600;
+    margin-bottom:4px;
+    color:var(--ink);
+  }
+  .req{ color:var(--pulse); margin-left:3px; }
+  .hint{
+    font-size:13px;
+    color:var(--slate-dark);
+    margin:0 0 10px;
+    line-height:1.5;
+  }
+
+  input[type="text"],
+  input[type="date"],
+  textarea{
+    width:100%;
+    font-family:'Inter',sans-serif;
+    font-size:15px;
+    padding:12px 14px;
+    border-radius:9px;
+    border:1.5px solid #DAD6CC;
+    background:#FFFEFB;
+    color:var(--ink);
+    transition:border-color 0.15s, box-shadow 0.15s;
+  }
+  textarea{ resize:vertical; min-height:78px; line-height:1.5;}
+  input:focus, textarea:focus{
+    outline:none;
+    border-color:var(--pulse);
+    box-shadow:0 0 0 3px var(--pulse-dim);
+  }
+  input:focus-visible, textarea:focus-visible, button:focus-visible, .opt:focus-within{
+    outline:2px solid var(--pulse);
+    outline-offset:2px;
+  }
+
+  .choices{ display:flex; flex-direction:column; gap:8px; }
+  .opt{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    padding:12px 14px;
+    border:1.5px solid #DAD6CC;
+    border-radius:9px;
+    cursor:pointer;
+    background:#FFFEFB;
+    transition:border-color 0.15s, background 0.15s;
+  }
+  .opt:hover{ border-color:#C7C2B6; }
+  .opt input{ margin-top:2px; accent-color:var(--pulse); width:16px; height:16px; flex-shrink:0; cursor:pointer;}
+  .opt span{ font-size:14.5px; line-height:1.45; }
+  .opt.checked{
+    border-color:var(--pulse);
+    background:var(--pulse-dim);
+  }
+
+  .row-inline{ display:flex; gap:14px; }
+  .row-inline > div{ flex:1; }
+
+  /* Scale */
+  .scale-wrap{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    margin-top:6px;
+  }
+  .scale-end{
+    font-size:11.5px;
+    color:var(--slate-dark);
+    text-align:center;
+    width:62px;
+    line-height:1.3;
+    flex-shrink:0;
+  }
+  .scale-pts{
+    display:flex;
+    gap:6px;
+    flex:1;
+    justify-content:space-between;
+  }
+  .scale-pt{
+    flex:1;
+    text-align:center;
+  }
+  .scale-pt input{ display:none; }
+  .scale-pt label{
+    display:block;
+    width:100%;
+    padding:10px 0;
+    border:1.5px solid #DAD6CC;
+    border-radius:8px;
+    font-family:'JetBrains Mono',monospace;
+    font-weight:700;
+    font-size:14px;
+    cursor:pointer;
+    background:#FFFEFB;
+    color:var(--ink);
+    transition:all 0.15s;
+  }
+  .scale-pt input:checked + label{
+    border-color:var(--pulse);
+    background:var(--pulse);
+    color:#fff;
+  }
+
+  /* Commit banner section */
+  .commit{
+    background:var(--ink-2);
+    color:var(--paper);
+    border:1px solid #2A2D36;
+  }
+  .commit .section-sub{ color:#9DA0AA; }
+  .commit label.q{ color:var(--paper); }
+  .commit .opt{
+    background:#15171C;
+    border-color:#2A2D36;
+  }
+  .commit .opt span{ color:#E5E3DC; }
+  .commit .opt.checked{
+    border-color:var(--ok);
+    background:#3DDC8418;
+  }
+  .quote{
+    font-style:italic;
+    color:#C9CAD1;
+    font-size:14.5px;
+    border-left:2px solid var(--pulse);
+    padding-left:14px;
+    margin:0 0 24px;
+    line-height:1.6;
+  }
+
+  /* Submit */
+  .submit-row{
+    padding:8px 8px 40px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:14px;
+  }
+  button[type="submit"]{
+    font-family:'Oswald',sans-serif;
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+    font-weight:700;
+    font-size:15px;
+    background:var(--pulse);
+    color:#fff;
+    border:none;
+    padding:16px 38px;
+    border-radius:999px;
+    cursor:pointer;
+    transition:transform 0.15s, box-shadow 0.15s;
+    box-shadow:0 8px 24px -8px #FF4D2E66;
+  }
+  button[type="submit"]:hover{ transform:translateY(-2px); }
+  button[type="submit"]:active{ transform:translateY(0); }
+  .submit-note{
+    font-size:12.5px;
+    color:var(--slate);
+    text-align:center;
+    max-width:340px;
+  }
+  .error-banner{
+    background:#FF4D2E18;
+    border:1px solid var(--pulse);
+    color:#FFB3A0;
+    border-radius:9px;
+    padding:12px 16px;
+    font-size:13.5px;
+    margin-bottom:20px;
+    display:none;
+  }
+
+  /* Confirmation state */
+  .confirm{
+    display:none;
+    max-width:680px;
+    margin:0 auto;
+    padding:100px 24px;
+    text-align:center;
+  }
+  .confirm .ring{
+    width:72px;height:72px;
+    border-radius:50%;
+    border:3px solid var(--ok);
+    display:flex;align-items:center;justify-content:center;
+    margin:0 auto 24px;
+  }
+  .confirm h2{ font-size:28px; margin:0 0 10px; }
+  .confirm p{ color:#C9CAD1; font-size:15px; line-height:1.6; max-width:420px; margin:0 auto; }
+
+  @media (max-width:560px){
+    .hero{ padding:80px 18px 36px; }
+    .section{ padding:28px 20px; }
+    .row-inline{ flex-direction:column; }
+    .dial-label{ display:none; }
+    .dial-wrap{ padding:8px; }
+    .scale-end{ width:44px; font-size:10px; }
+  }
+
+  /* ---------- DASHBOARD ---------- */
+  .refresh-btn{
+    font-family:'Inter',sans-serif; font-size:13px; font-weight:600;
+    background:var(--ink-2); color:var(--paper); border:1px solid #2A2D36;
+    padding:9px 16px; border-radius:999px; cursor:pointer;
+    display:inline-flex; align-items:center; gap:7px;
+    transition:border-color 0.15s;
+  }
+  .refresh-btn:hover{ border-color:var(--pulse); }
+  .refresh-btn svg{ width:14px; height:14px; }
+  .refresh-btn.spinning svg{ animation:spin 0.8s linear infinite; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  .state-msg{
+    text-align:center; padding:80px 24px; color:var(--slate);
+    font-size:14.5px; line-height:1.6;
+  }
+  .state-msg strong{ display:block; color:var(--paper); font-size:17px; margin-bottom:8px; }
+
+  .stats-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:36px; }
+  .stat-card{ background:var(--paper); color:var(--ink); border-radius:var(--radius); padding:22px 20px; }
+  .stat-card .label{ font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--slate-dark); margin-bottom:10px; }
+  .stat-card .value{ font-family:'Oswald',sans-serif; font-weight:700; font-size:34px; line-height:1; }
+  .stat-card .sub{ font-size:12.5px; color:var(--slate-dark); margin-top:6px; }
+  .stat-card.accent .value{ color:var(--pulse); }
+
+  #dashboardView .card{ background:var(--paper); color:var(--ink); border-radius:var(--radius); padding:30px 28px; margin-bottom:24px; }
+  #dashboardView .card h2{ font-size:19px; margin:0 0 4px; }
+  #dashboardView .card .card-sub{ font-size:13.5px; color:var(--slate-dark); margin:0 0 22px; }
+
+  .bar-row{ display:flex; align-items:center; gap:14px; margin-bottom:10px; }
+  .bar-row:last-child{ margin-bottom:0; }
+  .bar-label{ width:90px; font-size:13px; color:var(--slate-dark); flex-shrink:0; text-align:right; }
+  .bar-track{ flex:1; height:22px; background:#EFEBE3; border-radius:6px; overflow:hidden; }
+  .bar-fill{ height:100%; background:var(--pulse); border-radius:6px; transition:width 0.5s ease; }
+  .bar-count{ width:30px; font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:700; text-align:right; flex-shrink:0; }
+
+  .attn-item{ display:flex; justify-content:space-between; gap:16px; padding:14px 0; border-top:1px solid #00000010; }
+  .attn-item:first-child{ border-top:none; padding-top:0; }
+  .attn-name{ font-weight:600; font-size:14.5px; }
+  .attn-meta{ font-size:12.5px; color:var(--slate-dark); margin-top:2px; }
+  .attn-tag{ font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; padding:4px 9px; border-radius:6px; flex-shrink:0; align-self:flex-start; background:var(--warn-dim); color:#B8860B; white-space:nowrap; }
+  .attn-tag.low{ background:var(--pulse-dim); color:var(--pulse); }
+
+  .upcoming-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  .upcoming-block{ background:#FFFEFB; border:1px solid #E5E1D6; border-radius:10px; padding:18px; }
+  .upcoming-block .count{ font-family:'Oswald',sans-serif; font-weight:700; font-size:26px; color:var(--pulse); }
+  .upcoming-block .title{ font-size:13px; font-weight:600; margin:4px 0 12px; }
+  .upcoming-block ul{ margin:0; padding:0; list-style:none; font-size:13px; color:var(--slate-dark); }
+  .upcoming-block li{ padding:4px 0; border-top:1px solid #EFEBE3; }
+  .upcoming-block li:first-child{ border-top:none; }
+  .upcoming-block .none{ font-style:italic; color:var(--slate); }
+
+  .table-controls{ display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
+  .table-controls input, .table-controls select{ font-family:'Inter',sans-serif; font-size:13.5px; padding:9px 12px; border-radius:8px; border:1.5px solid #DAD6CC; background:#FFFEFB; color:var(--ink); }
+  .table-controls input{ flex:1; min-width:160px; }
+  #dashboardView table{ width:100%; border-collapse:collapse; font-size:13.5px; }
+  #dashboardView th{ text-align:left; font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.06em; text-transform:uppercase; color:var(--slate-dark); padding:10px 12px; border-bottom:2px solid #E5E1D6; }
+  #dashboardView td{ padding:12px; border-bottom:1px solid #EFEBE3; vertical-align:top; }
+  tr.roster-row{ cursor:pointer; }
+  tr.roster-row:hover{ background:#FBFAF7; }
+  .pill{ display:inline-block; font-size:11.5px; font-weight:600; padding:3px 9px; border-radius:999px; background:var(--paper-dim); }
+  .pill.coach{ background:#E4E9FF; color:#3B4FCC; }
+  .pill.crew{ background:#FFE9D6; color:#B85C00; }
+  .pill.both{ background:#E6F7EC; color:#1F8A4C; }
+  .score-dot{ display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:50%; font-family:'JetBrains Mono',monospace; font-weight:700; font-size:12px; color:#fff; }
+  .detail-row td{ background:#FBFAF7; padding:0; }
+  .detail-inner{ padding:0 12px 18px; font-size:13px; line-height:1.6; color:var(--slate-dark); }
+  .detail-inner strong{ color:var(--ink); display:block; margin-top:10px; font-size:12px; text-transform:uppercase; letter-spacing:0.04em; }
+  .detail-inner strong:first-child{ margin-top:0; }
+  .chevron{ transition:transform 0.15s; display:inline-block; }
+  .chevron.open{ transform:rotate(90deg); }
+
+  @media (max-width:760px){
+    .stats-grid{ grid-template-columns:repeat(2,1fr); }
+    .upcoming-grid{ grid-template-columns:1fr; }
+    #dashboardView header{ flex-direction:column; align-items:flex-start; }
+    #dashboardView table{ font-size:12.5px; }
+    #dashboardView th:nth-child(4), #dashboardView td:nth-child(4){ display:none; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ transition:none !important; }
+  }
+</style>
+</head>
+<body>
+
+<a href="#" id="hccmTabLink" style="position:fixed; top:18px; left:18px; z-index:60; font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--paper); background:rgba(21,23,28,0.85); backdrop-filter:blur(8px); border:1px solid #2A2D36; border-radius:999px; padding:9px 16px; text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+  HCCM
+</a>
+
+<div id="passwordModal" style="display:none; position:fixed; inset:0; z-index:100; background:rgba(21,23,28,0.92); backdrop-filter:blur(4px); align-items:center; justify-content:center; padding:24px;">
+  <div style="background:var(--paper); color:var(--ink); border-radius:14px; padding:32px 28px; max-width:340px; width:100%;">
+    <h2 class="display" style="font-size:20px; margin:0 0 6px;">HCCM access</h2>
+    <p style="font-size:13.5px; color:var(--slate-dark); margin:0 0 18px; line-height:1.5;">Enter the password to view the dashboard.</p>
+    <input type="password" id="hccmPasswordInput" placeholder="Password" style="width:100%; font-size:15px; padding:11px 13px; border-radius:9px; border:1.5px solid #DAD6CC; background:#FFFEFB; color:var(--ink); margin-bottom:10px;">
+    <p id="hccmPasswordError" style="display:none; color:var(--pulse); font-size:12.5px; margin:0 0 10px;">Incorrect password — try again.</p>
+    <div style="display:flex; gap:10px;">
+      <button id="hccmPasswordSubmit" style="flex:1; font-family:'Oswald',sans-serif; text-transform:uppercase; letter-spacing:0.04em; font-weight:700; font-size:13px; background:var(--pulse); color:#fff; border:none; padding:12px; border-radius:9px; cursor:pointer;">Unlock</button>
+      <button id="hccmPasswordCancel" style="font-family:'Inter',sans-serif; font-size:13px; background:none; color:var(--slate-dark); border:1px solid #DAD6CC; padding:12px 16px; border-radius:9px; cursor:pointer;">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="formView">
+
+<div class="dial-wrap" aria-hidden="true">
+  <div class="dial">
+    <svg viewBox="0 0 46 46">
+      <circle class="dial-track" cx="23" cy="23" r="19"></circle>
+      <circle class="dial-fill" id="dialFill" cx="23" cy="23" r="19" stroke-dasharray="0 120"></circle>
+    </svg>
+    <div class="dial-pct" id="dialPct">0%</div>
+  </div>
+  <div class="dial-label">Reset progress<strong id="dialStatus">Not started</strong></div>
+</div>
+
+
+<div class="hero">
+  <div class="eyebrow">Quarterly check-in</div>
+  <p class="quote" style="margin-bottom:24px;">"Service is black and white. Hospitality is color." That's why we show up the way we do at LIC.</p>
+  <h1 class="display">Reset the studio.<br><span class="accent">Realign</span> as a team.</h1>
+  <p>This form is for both coaches and core crew. Confirm you're clear on reset standards, tell us what's getting in the way, and acknowledge the part that matters most — showing up for each other.</p>
+</div>
+
+<div style="max-width:680px; margin:0 auto 36px; padding:0 24px;">
+  <div style="background:var(--ink-2); border:1px solid #2A2D36; border-radius:14px; padding:28px 28px 26px;">
+    <div class="eyebrow" style="margin-bottom:14px;">Service vs. hospitality</div>
+    <p style="color:#C9CAD1; font-size:14.5px; line-height:1.6; margin:0 0 18px;">Before the checklist, a quick reminder of the idea behind it — and why the duties on this form matter beyond just "getting it done."</p>
+    <ul style="margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:14px;">
+      <li style="display:flex; gap:12px; align-items:flex-start;">
+        <span style="flex-shrink:0; width:6px; height:6px; border-radius:50%; background:var(--pulse); margin-top:8px;"></span>
+        <span style="color:#E5E3DC; font-size:14.5px; line-height:1.55;"><strong style="color:#fff;">Service is part of the product.</strong> It's the technical, repeatable stuff — the reset done right, the cues called correctly, the studio ready on time. Necessary, but it's possible to nail every box and still leave someone feeling nothing.</span>
+      </li>
+      <li style="display:flex; gap:12px; align-items:flex-start;">
+        <span style="flex-shrink:0; width:6px; height:6px; border-radius:50%; background:var(--pulse); margin-top:8px;"></span>
+        <span style="color:#E5E3DC; font-size:14.5px; line-height:1.55;"><strong style="color:#fff;">Hospitality is how someone feels because you were there.</strong> Noticed, welcomed, taken care of — by a client walking in, or by a teammate who knows you've got their back.</span>
+      </li>
+      <li style="display:flex; gap:12px; align-items:flex-start;">
+        <span style="flex-shrink:0; width:6px; height:6px; border-radius:50%; background:var(--pulse); margin-top:8px;"></span>
+        <span style="color:#E5E3DC; font-size:14.5px; line-height:1.55;"><strong style="color:#fff;">The checklist below is service.</strong> Resetting machines, restocking the lobby, clearing the coach stand — it's the baseline that makes the studio function.</span>
+      </li>
+      <li style="display:flex; gap:12px; align-items:flex-start;">
+        <span style="flex-shrink:0; width:6px; height:6px; border-radius:50%; background:var(--pulse); margin-top:8px;"></span>
+        <span style="color:#E5E3DC; font-size:14.5px; line-height:1.55;"><strong style="color:#fff;">Showing up for each other is hospitality.</strong> Covering a reset you didn't leave, comping a class as a courtesy, asking a teammate "what do you need" — that's the part that turns coworkers into a team people want to stay on.</span>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<form id="resetForm" novalidate>
+
+  <div class="section">
+    <div class="section-head"><span class="section-num">01</span><h2>Who you are</h2></div>
+    <p class="section-sub">Quick identifiers — takes ten seconds.</p>
+
+    <div class="row-inline">
+      <div class="field">
+        <label class="q" for="name">Name<span class="req">*</span></label>
+        <input type="text" id="name" name="name" required>
+      </div>
+      <div class="field">
+        <label class="q" for="date">Date<span class="req">*</span></label>
+        <input type="date" id="date" name="date" required>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="q">Role<span class="req">*</span></label>
+      <div class="choices" data-group="role">
+        <label class="opt"><input type="radio" name="role" value="Coach" required><span>Coach</span></label>
+        <label class="opt"><input type="radio" name="role" value="Core Crew" required><span>Core Crew</span></label>
+        <label class="opt"><input type="radio" name="role" value="Both"><span>Both</span></label>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="q" for="homestudio">Home studio<span class="req">*</span></label>
+      <input type="text" id="homestudio" name="homestudio" required>
+    </div>
+  </div>
+
+  <div style="max-width:100%; margin:0 0 24px; padding:0;">
+    <div style="position:relative; width:100%; padding-top:56.25%; border-radius:14px; overflow:hidden; border:1px solid #2A2D36; background:#000;">
+      <iframe
+        src="https://www.youtube.com/embed/i1MqLTsc1aE?start=42&rel=0"
+        title="Reset standards walkthrough"
+        style="position:absolute; top:0; left:0; width:100%; height:100%; border:0;"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        referrerpolicy="strict-origin-when-cross-origin"
+        allowfullscreen>
+      </iframe>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head"><span class="section-num">02</span><h2>Pre class</h2></div>
+    <p class="section-sub">What we bring into the room before we ever touch a machine.</p>
+
+    <div class="field">
+      <label class="q">Pre class commitments<span class="req">*</span></label>
+      <div class="choices" data-group="preclass">
+        <label class="opt"><input type="checkbox" name="preclass" value="Host the party"><span>Host the party</span></label>
+        <label class="opt"><input type="checkbox" name="preclass" value="Amplify CORE (connect, open, recognize, educate)"><span>Amplify CORE (connect, open, recognize, educate)</span></label>
+        <label class="opt"><input type="checkbox" name="preclass" value="Meet your clients / open the door for clients"><span>Meet your clients / open the door for clients</span></label>
+        <label class="opt"><input type="checkbox" name="preclass" value="Help core crew/HCCM with check-in / get waivers signed"><span>Help core crew/HCCM with check-in / get waivers signed</span></label>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="q">Core Crew checklist</label>
+      <p class="hint">For Core Crew shifts specifically.</p>
+      <div class="choices" data-group="corecrew">
+        <label class="opt"><input type="checkbox" name="corecrew" value="Use shift wrap-up as guide for shift"><span>Use shift wrap-up as guide for shift</span></label>
+        <label class="opt"><input type="checkbox" name="corecrew" value="Stand up for every check-in"><span>Stand up for every check-in</span></label>
+        <label class="opt"><input type="checkbox" name="corecrew" value="Open the door for clients"><span>Open the door for clients</span></label>
+        <label class="opt"><input type="checkbox" name="corecrew" value="Use the reset/restock alarm every 3 hours to support coaches with lobby duties"><span>Use the reset/restock alarm every 3 hours to support coaches with lobby duties</span></label>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head"><span class="section-num">03</span><h2>Post class</h2></div>
+    <p class="section-sub">A great reset means the next person can focus on clients, not cleanup. Check off the duties you understand and commit to.</p>
+
+    <div class="field">
+      <label class="q">Machine & studio reset<span class="req">*</span></label>
+      <div class="choices" data-group="machine">
+        <label class="opt"><input type="checkbox" name="machine" value="Cables, springs, poles reset correctly"><span>Cables, springs, and poles reset correctly</span></label>
+        <label class="opt"><input type="checkbox" name="machine" value="Stability poles racked"><span>Stability poles racked</span></label>
+        <label class="opt"><input type="checkbox" name="machine" value="Trash emptied, dehumidifier emptied after each block"><span>Trash emptied, dehumidifier emptied after each block</span></label>
+        <label class="opt"><input type="checkbox" name="machine" value="Wipes and sanitizer restocked"><span>Wipes and sanitizer restocked</span></label>
+        <label class="opt"><input type="checkbox" name="machine" value="Coach stand cleared of personal items"><span>Coach stand cleared of personal items</span></label>
+        <label class="opt"><input type="checkbox" name="machine" value="Tighten black side platform handlebars if used"><span>Tighten black side platform handlebars if used</span></label>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="q">Lobby & front desk reset<span class="req">*</span></label>
+      <div class="choices" data-group="lobby">
+        <label class="opt"><input type="checkbox" name="lobby" value="Bathroom and vanity restocked"><span>Bathroom and vanity restocked</span></label>
+        <label class="opt"><input type="checkbox" name="lobby" value="Lockers reset"><span>Lockers reset</span></label>
+        <label class="opt"><input type="checkbox" name="lobby" value="Front desk amenities and fridge restocked"><span>Front desk amenities and fridge restocked</span></label>
+        <label class="opt"><input type="checkbox" name="lobby" value="Beverage log reconciled"><span>Beverage log reconciled</span></label>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head"><span class="section-num">04</span><h2>Realign — self check <span style="font-size:13px; color:var(--slate-dark); text-transform:none; letter-spacing:0;">(coach and core crew)</span></h2></div>
+    <p class="section-sub">Honest answers help us fix the real problem, not just the symptom.</p>
+
+    <div class="field">
+      <label class="q">How supported do you feel during transitions/handoffs?<span class="req">*</span></label>
+      <div class="scale-wrap">
+        <span class="scale-end">Need more support</span>
+        <div class="scale-pts" data-group="scale">
+          <div class="scale-pt"><input type="radio" name="scale" id="s1" value="1" required><label for="s1">1</label></div>
+          <div class="scale-pt"><input type="radio" name="scale" id="s2" value="2"><label for="s2">2</label></div>
+          <div class="scale-pt"><input type="radio" name="scale" id="s3" value="3"><label for="s3">3</label></div>
+          <div class="scale-pt"><input type="radio" name="scale" id="s4" value="4"><label for="s4">4</label></div>
+          <div class="scale-pt"><input type="radio" name="scale" id="s5" value="5"><label for="s5">5</label></div>
+        </div>
+        <span class="scale-end">Fully supported</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="q" for="barriers">What barriers prevent you from completing these duties consistently?<span class="req">*</span></label>
+      <p class="hint">Write "N/A" if none.</p>
+      <textarea id="barriers" name="barriers" required></textarea>
+    </div>
+
+    <div class="field">
+      <label class="q" for="support">What support or resources would help you maintain these standards?<span class="req">*</span></label>
+      <p class="hint">Write "N/A" if none.</p>
+      <textarea id="support" name="support" required></textarea>
+    </div>
+
+    <div class="field">
+      <label class="q" for="sawit">In the last quarter, how have you seen a teammate show up for you? <span style="font-weight:400; font-size:13px; color:var(--slate-dark);">(coach and core crew)</span></label>
+      <p class="hint">Optional — but a great way to give credit where it's due.</p>
+      <textarea id="sawit" name="sawit"></textarea>
+    </div>
+  </div>
+
+  <div class="section commit">
+    <div class="section-head"><span class="section-num">05</span><h2 style="color:#F7F5F1">Showing up for each other <span style="font-size:13px; color:#9DA0AA; text-transform:none; letter-spacing:0;">(coach and core crew)</span></h2></div>
+    <p class="quote">"A great reset means the next coach can focus on clients, not cleanup. I understand my pre/post duties and commit to leave the studio ready for my teammates."</p>
+
+    <div class="field">
+      <label class="q">Team commitment<span class="req">*</span></label>
+      <div class="choices" data-group="commitment">
+        <label class="opt"><input type="radio" name="commitment" value="Yes, I understand and commit" required><span>Yes, I understand and commit</span></label>
+        <label class="opt"><input type="radio" name="commitment" value="I have questions and will discuss with my manager"><span>I have questions and will discuss with my manager</span></label>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="q">HCCM class comps <span style="font-weight:400; font-size:13px; color:#9DA0AA;">(coach and core crew)</span></label>
+      <p class="hint">As your HCCM, part of building this community is taking class alongside you.</p>
+      <div class="choices" data-group="comp">
+        <label class="opt"><input type="radio" name="comp" value="Use my monthly class credit"><span>Use my monthly class credit</span></label>
+        <label class="opt"><input type="radio" name="comp" value="Yes, please comp 4 monthly credits to support teammates"><span>Yes, please comp 4 monthly credits to support teammates</span></label>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="q" for="other">Anything else — questions, concerns, or suggestions?</label>
+      <textarea id="other" name="other"></textarea>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head"><span class="section-num">06</span><h2>Before you submit</h2></div>
+    <p class="section-sub">A few things on your radar for this quarter.</p>
+
+    <div class="field">
+      <label class="q">Upcoming commitments</label>
+      <div class="choices" data-group="upcoming">
+        <label class="opt"><input type="checkbox" name="upcoming" value="Attending Power 30 on July 1st at 6pm with Coach Angie"><span>I will be attending Power 30 on July 1st at 6pm with Coach Angie (please check this even if you already accepted the calendar invite)</span></label>
+        <label class="opt"><input type="checkbox" name="upcoming" value="Volunteering July 9th 10am-1pm for Connected Chef with the LIC team"><span>I would like to volunteer on July 9th, 10am–1pm for Connected Chef with the LIC team (please check this even if you already accepted the calendar invite)</span></label>
+        <label class="opt"><input type="checkbox" name="upcoming" value="Would like a brief 1-on-1 with HCCM to align on goals / support"><span>Outside of CDT in-person connect, I'd like a brief 1-on-1 with my HCCM to align on goals or anything else they can do to support</span></label>
+      </div>
+    </div>
+  </div>
+
+  <div class="submit-row">
+    <div class="error-banner" id="errorBanner">Please fill in all required fields before submitting.</div>
+    <button type="submit">Submit</button>
+    <p class="submit-note">Submitting saves your answers directly — no email needed.</p>
+  </div>
+
+</form>
+
+<div class="confirm" id="confirmScreen">
+  <div class="ring">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3DDC84" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="20 6 9 17 4 12"></polyline>
+    </svg>
+  </div>
+  <h2 class="display">Reset logged.</h2>
+  <p>Thanks for taking the time to realign. Your answers have been saved. You can also copy them below as a backup.</p>
+  <div class="submit-row">
+    <button type="button" id="copyBtn" style="background:var(--ink-2); border:1px solid #2A2D36;">Copy answers</button>
+  </div>
+</div>
+
+</div>
+
+<div id="dashboardView" style="display:none;">
+  <div class="wrap" style="max-width:1080px; margin:0 auto; padding:0 24px;">
+    <header style="padding:48px 0 28px; display:flex; align-items:flex-end; justify-content:space-between; flex-wrap:wrap; gap:16px; border-bottom:1px solid #2A2D36; margin-bottom:32px;">
+      <div>
+        <div class="eyebrow">HCCM Dashboard</div>
+        <h1 class="display" style="font-size:clamp(28px,4vw,42px); margin:0; line-height:1.05;">Quarterly Reset & Realign</h1>
+      </div>
+      <div style="text-align:right;">
+        <p style="font-size:12.5px; color:var(--slate); margin:0 0 8px;" id="lastUpdated">Not loaded yet</p>
+        <a href="#" id="backToFormLink" style="font-family:'Inter',sans-serif; font-size:13px; font-weight:600; color:var(--paper); background:var(--ink-2); border:1px solid #2A2D36; padding:9px 16px; border-radius:999px; text-decoration:none; margin-right:8px; display:inline-block;">← Back to form</a>
+        <button class="refresh-btn" id="refreshBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+          Refresh
+        </button>
+      </div>
+    </header>
+
+    <div id="loadingState" class="state-msg">
+      <strong>Loading responses…</strong>
+      Pulling the latest from your sheet.
+    </div>
+
+    <div id="emptyState" class="state-msg" style="display:none;">
+      <strong>No responses yet</strong>
+      Once coaches and core crew submit the form, they'll show up here automatically.
+    </div>
+
+    <div id="dashboardContent" style="display:none;">
+
+      <div class="stats-grid" id="statsGrid"></div>
+
+      <div class="card" id="attentionCard" style="display:none;">
+        <h2>Needs attention</h2>
+        <p class="card-sub">Low support scores or flagged barriers — worth a quick check-in.</p>
+        <div id="attentionList"></div>
+      </div>
+
+      <div class="card">
+        <h2>Support during transitions</h2>
+        <p class="card-sub">How supported people feel, on a scale of 1 (need more support) to 5 (fully supported).</p>
+        <div id="scaleChart"></div>
+      </div>
+
+      <div class="card">
+        <h2>Upcoming commitments</h2>
+        <p class="card-sub">Who's signed up for what this quarter.</p>
+        <div class="upcoming-grid" id="upcomingGrid"></div>
+      </div>
+
+      <div class="card">
+        <h2>Full roster</h2>
+        <p class="card-sub">Every submission — click a row to expand full answers.</p>
+        <div class="table-controls">
+          <input type="text" id="searchInput" placeholder="Search by name or studio…">
+          <select id="roleFilter">
+            <option value="">All roles</option>
+            <option value="Coach">Coach</option>
+            <option value="Core Crew">Core Crew</option>
+            <option value="Both">Both</option>
+          </select>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th></th>
+              <th>Name</th>
+              <th>Role</th>
+              <th>Studio</th>
+              <th>Date</th>
+              <th>Support</th>
+              <th>Commitment</th>
+            </tr>
+          </thead>
+          <tbody id="rosterBody"></tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const form = document.getElementById('resetForm');
+const dialFill = document.getElementById('dialFill');
+const dialPct = document.getElementById('dialPct');
+const dialStatus = document.getElementById('dialStatus');
+const errorBanner = document.getElementById('errorBanner');
+const CIRC = 2 * Math.PI * 19;
+
+function requiredFieldsStatus(){
+  const groups = {};
+  const allInputs = form.querySelectorAll('input,textarea');
+  let totalRequired = 0, filledRequired = 0;
+
+  // text/date/textarea required
+  form.querySelectorAll('input[required][type="text"], input[required][type="date"], textarea[required]').forEach(el=>{
+    totalRequired++;
+    if(el.value.trim()) filledRequired++;
+  });
+  // radio groups required
+  ['role','scale','commitment'].forEach(name=>{
+    const radios = form.querySelectorAll(`input[name="${name}"]`);
+    if(radios.length){
+      totalRequired++;
+      if(Array.from(radios).some(r=>r.checked)) filledRequired++;
+    }
+  });
+  // checkbox groups required (machine, lobby) — require at least one checked
+  ['machine','lobby','preclass'].forEach(name=>{
+    const boxes = form.querySelectorAll(`input[name="${name}"]`);
+    if(boxes.length){
+      totalRequired++;
+      if(Array.from(boxes).some(b=>b.checked)) filledRequired++;
+    }
+  });
+  return {totalRequired, filledRequired};
+}
+
+function updateDial(){
+  const {totalRequired, filledRequired} = requiredFieldsStatus();
+  const pct = totalRequired ? Math.round((filledRequired/totalRequired)*100) : 0;
+  const dash = (pct/100) * CIRC;
+  dialFill.setAttribute('stroke-dasharray', `${dash} ${CIRC}`);
+  dialPct.textContent = pct + '%';
+  dialStatus.textContent = pct === 0 ? 'Not started' : pct === 100 ? 'Ready to submit' : 'In progress';
+}
+
+form.addEventListener('input', (e)=>{
+  updateDial();
+  const opt = e.target.closest('.opt');
+  if(opt){
+    const input = opt.querySelector('input');
+    if(input.type === 'radio'){
+      const group = input.name;
+      form.querySelectorAll(`input[name="${group}"]`).forEach(r=>{
+        r.closest('.opt').classList.toggle('checked', r.checked);
+      });
+    } else {
+      opt.classList.toggle('checked', input.checked);
+    }
+  }
+});
+
+function collectAnswers(){
+  const fd = new FormData(form);
+  const lines = [];
+  lines.push(`Name: ${fd.get('name')||''}`);
+  lines.push(`Role: ${fd.get('role')||''}`);
+  lines.push(`Home studio: ${fd.get('homestudio')||''}`);
+  lines.push(`Date: ${fd.get('date')||''}`);
+  lines.push('');
+  lines.push('-- Pre Class --');
+  fd.getAll('preclass').forEach(v=>lines.push('✔ '+v));
+  lines.push('');
+  lines.push('-- Core Crew Checklist --');
+  fd.getAll('corecrew').forEach(v=>lines.push('✔ '+v));
+  lines.push('');
+  lines.push('-- Machine & Studio Reset --');
+  fd.getAll('machine').forEach(v=>lines.push('✔ '+v));
+  lines.push('');
+  lines.push('-- Lobby & Front Desk Reset --');
+  fd.getAll('lobby').forEach(v=>lines.push('✔ '+v));
+  lines.push('');
+  lines.push('-- Realign --');
+  lines.push(`Support during transitions (1-5): ${fd.get('scale')||''}`);
+  lines.push(`Barriers: ${fd.get('barriers')||''}`);
+  lines.push(`Support needed: ${fd.get('support')||''}`);
+  lines.push(`Saw a teammate show up: ${fd.get('sawit')||''}`);
+  lines.push('');
+  lines.push('-- Team Commitment --');
+  lines.push(`Commitment: ${fd.get('commitment')||''}`);
+  lines.push(`HCCM class comp: ${fd.get('comp')||''}`);
+  lines.push(`Other notes: ${fd.get('other')||''}`);
+  lines.push('');
+  lines.push('-- Before You Submit --');
+  fd.getAll('upcoming').forEach(v=>lines.push('✔ '+v));
+  return lines.join('\n');
+}
+
+let lastSummary = '';
+
+const ENDPOINT_URL = 'https://script.google.com/macros/s/AKfycbyrbhYTXHDNTUbYIPq3O7EYYfZBaUCn8LkVsHW9Z-IPgDCYKC91bo7CKMORqv45L8gb/exec';
+
+form.addEventListener('submit', function(e){
+  e.preventDefault();
+  const {totalRequired, filledRequired} = requiredFieldsStatus();
+  if(filledRequired < totalRequired){
+    errorBanner.style.display = 'block';
+    errorBanner.scrollIntoView({behavior:'smooth', block:'center'});
+    return;
+  }
+  errorBanner.style.display = 'none';
+
+  const fd = new FormData(form);
+  lastSummary = collectAnswers();
+
+  const payload = {
+    name: fd.get('name')||'',
+    role: fd.get('role')||'',
+    homestudio: fd.get('homestudio')||'',
+    date: fd.get('date')||'',
+    preclass: fd.getAll('preclass').join('; '),
+    corecrew: fd.getAll('corecrew').join('; '),
+    machine: fd.getAll('machine').join('; '),
+    lobby: fd.getAll('lobby').join('; '),
+    barriers: fd.get('barriers')||'',
+    support: fd.get('support')||'',
+    scale: fd.get('scale')||'',
+    sawit: fd.get('sawit')||'',
+    commitment: fd.get('commitment')||'',
+    comp: fd.get('comp')||'',
+    other: fd.get('other')||'',
+    upcoming: fd.getAll('upcoming').join('; ')
+  };
+
+  fetch(ENDPOINT_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    body: JSON.stringify(payload)
+  }).catch(()=>{ /* opaque response expected with no-cors; proceed regardless */ });
+
+  form.style.display = 'none';
+  document.querySelector('.dial-wrap').style.display = 'none';
+  document.getElementById('confirmScreen').style.display = 'block';
+});
+
+document.getElementById('copyBtn').addEventListener('click', function(){
+  navigator.clipboard.writeText(lastSummary).then(()=>{
+    this.textContent = 'Copied ✓';
+    setTimeout(()=>{ this.textContent = 'Copy answers'; }, 2000);
+  });
+});
+
+updateDial();
+</script>
+
+<script>
+/* ---------- HCCM PASSWORD GATE & VIEW SWITCH ---------- */
+const HCCM_PASSWORD = 'reset2026'; // change this to whatever password you want
+
+const formView = document.getElementById('formView');
+const dashboardView = document.getElementById('dashboardView');
+const passwordModal = document.getElementById('passwordModal');
+const hccmPasswordInput = document.getElementById('hccmPasswordInput');
+const hccmPasswordError = document.getElementById('hccmPasswordError');
+
+document.getElementById('hccmTabLink').addEventListener('click', function(e){
+  e.preventDefault();
+  passwordModal.style.display = 'flex';
+  hccmPasswordError.style.display = 'none';
+  hccmPasswordInput.value = '';
+  hccmPasswordInput.focus();
+});
+
+document.getElementById('hccmPasswordCancel').addEventListener('click', function(){
+  passwordModal.style.display = 'none';
+});
+
+function attemptUnlock(){
+  if(hccmPasswordInput.value === HCCM_PASSWORD){
+    passwordModal.style.display = 'none';
+    formView.style.display = 'none';
+    dashboardView.style.display = 'block';
+    document.querySelector('.dial-wrap').style.display = 'none';
+    loadDashboardData();
+  } else {
+    hccmPasswordError.style.display = 'block';
+  }
+}
+
+document.getElementById('hccmPasswordSubmit').addEventListener('click', attemptUnlock);
+hccmPasswordInput.addEventListener('keydown', function(e){ if(e.key === 'Enter') attemptUnlock(); });
+
+document.getElementById('backToFormLink').addEventListener('click', function(e){
+  e.preventDefault();
+  dashboardView.style.display = 'none';
+  formView.style.display = 'block';
+  document.querySelector('.dial-wrap').style.display = 'flex';
+});
+
+/* ---------- DASHBOARD DATA & RENDERING ---------- */
+const DASHBOARD_ENDPOINT_URL = 'https://script.google.com/macros/s/AKfycbyrbhYTXHDNTUbYIPq3O7EYYfZBaUCn8LkVsHW9Z-IPgDCYKC91bo7CKMORqv45L8gb/exec';
+
+let allRows = [];
+
+function scoreColor(score){
+  const n = parseInt(score, 10);
+  if(n <= 2) return '#FF4D2E';
+  if(n === 3) return '#FFC542';
+  return '#3DDC84';
+}
+
+function rolePillClass(role){
+  if(role === 'Coach') return 'coach';
+  if(role === 'Core Crew') return 'crew';
+  return 'both';
+}
+
+function formatDate(iso){
+  if(!iso) return '—';
+  const d = new Date(iso);
+  if(isNaN(d)) return iso;
+  return d.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+}
+
+function splitList(str){
+  return (str || '').split(';').map(s=>s.trim()).filter(Boolean);
+}
+
+function loadDashboardData(){
+  document.getElementById('refreshBtn').classList.add('spinning');
+  document.getElementById('loadingState').style.display = 'block';
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('dashboardContent').style.display = 'none';
+
+  const cbName = 'handleDashboardData_' + Date.now();
+  window[cbName] = function(rows){
+    allRows = rows || [];
+    delete window[cbName];
+    document.body.removeChild(scriptTag);
+    document.getElementById('refreshBtn').classList.remove('spinning');
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('lastUpdated').textContent = 'Updated ' + new Date().toLocaleTimeString();
+
+    if(allRows.length === 0){
+      document.getElementById('emptyState').style.display = 'block';
+      return;
+    }
+    document.getElementById('dashboardContent').style.display = 'block';
+    renderStats(allRows);
+    renderAttention(allRows);
+    renderScaleChart(allRows);
+    renderUpcoming(allRows);
+    renderRoster(allRows);
+  };
+
+  const scriptTag = document.createElement('script');
+  scriptTag.src = DASHBOARD_ENDPOINT_URL + '?callback=' + cbName + '&_=' + Date.now();
+  scriptTag.onerror = function(){
+    document.getElementById('refreshBtn').classList.remove('spinning');
+    document.getElementById('loadingState').innerHTML = '<strong>Couldn\'t load data</strong>Check that the Apps Script is deployed and the URL is correct.';
+  };
+  document.body.appendChild(scriptTag);
+}
+
+function renderStats(rows){
+  const total = rows.length;
+  const coach = rows.filter(r => r.Role === 'Coach').length;
+  const crew = rows.filter(r => r.Role === 'Core Crew').length;
+  const both = rows.filter(r => r.Role === 'Both').length;
+  const committed = rows.filter(r => (r['Team Commitment']||'').startsWith('Yes')).length;
+  const scores = rows.map(r => parseInt(r['Support Scale (1-5)'], 10)).filter(n => !isNaN(n));
+  const avgScore = scores.length ? (scores.reduce((a,b)=>a+b,0) / scores.length).toFixed(1) : '—';
+
+  const grid = document.getElementById('statsGrid');
+  grid.innerHTML = `
+    <div class="stat-card">
+      <div class="label">Total responses</div>
+      <div class="value">${total}</div>
+      <div class="sub">${coach} coach · ${crew} core crew · ${both} both</div>
+    </div>
+    <div class="stat-card accent">
+      <div class="label">Avg. support score</div>
+      <div class="value">${avgScore}</div>
+      <div class="sub">out of 5</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Committed</div>
+      <div class="value">${total ? Math.round((committed/total)*100) : 0}%</div>
+      <div class="sub">${committed} of ${total} said yes</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Want a 1-on-1</div>
+      <div class="value">${rows.filter(r => (r['Upcoming Commitments']||'').includes('1-on-1')).length}</div>
+      <div class="sub">requested HCCM check-in</div>
+    </div>
+  `;
+}
+
+function renderAttention(rows){
+  const flagged = rows.filter(r => {
+    const score = parseInt(r['Support Scale (1-5)'], 10);
+    const barriers = (r['Barriers']||'').trim().toLowerCase();
+    const hasBarrier = barriers && barriers !== 'n/a' && barriers !== 'na' && barriers !== 'none';
+    return (!isNaN(score) && score <= 2) || hasBarrier;
+  });
+
+  const card = document.getElementById('attentionCard');
+  if(flagged.length === 0){ card.style.display = 'none'; return; }
+  card.style.display = 'block';
+
+  document.getElementById('attentionList').innerHTML = flagged.map(r => {
+    const score = parseInt(r['Support Scale (1-5)'], 10);
+    const lowScore = !isNaN(score) && score <= 2;
+    const barriers = (r['Barriers']||'').trim();
+    const showBarrier = barriers && barriers.toLowerCase() !== 'n/a' && barriers.toLowerCase() !== 'na';
+    return `
+      <div class="attn-item">
+        <div>
+          <div class="attn-name">${r.Name || 'Unnamed'} <span style="color:var(--slate-dark); font-weight:400;">— ${r.Role || ''}</span></div>
+          <div class="attn-meta">${showBarrier ? barriers : 'Low support score reported'}</div>
+        </div>
+        <span class="attn-tag ${lowScore ? 'low' : ''}">${lowScore ? 'Score: ' + score : 'Barrier flagged'}</span>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderScaleChart(rows){
+  const counts = {1:0,2:0,3:0,4:0,5:0};
+  rows.forEach(r => {
+    const s = parseInt(r['Support Scale (1-5)'], 10);
+    if(counts[s] !== undefined) counts[s]++;
+  });
+  const max = Math.max(1, ...Object.values(counts));
+  const labels = {1:'Need more', 2:'2', 3:'3', 4:'4', 5:'Fully supported'};
+
+  document.getElementById('scaleChart').innerHTML = [5,4,3,2,1].map(n => `
+    <div class="bar-row">
+      <div class="bar-label">${labels[n]}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${(counts[n]/max)*100}%; background:${scoreColor(n)};"></div></div>
+      <div class="bar-count">${counts[n]}</div>
+    </div>
+  `).join('');
+}
+
+function renderUpcoming(rows){
+  const power30 = [], connectedChef = [], oneOnOne = [];
+  rows.forEach(r => {
+    const list = splitList(r['Upcoming Commitments']);
+    list.forEach(item => {
+      if(item.includes('Power 30')) power30.push(r.Name || 'Unnamed');
+      if(item.includes('Connected Chef')) connectedChef.push(r.Name || 'Unnamed');
+      if(item.includes('1-on-1')) oneOnOne.push(r.Name || 'Unnamed');
+    });
+  });
+
+  function block(title, names){
+    return `
+      <div class="upcoming-block">
+        <div class="count">${names.length}</div>
+        <div class="title">${title}</div>
+        <ul>${names.length ? names.map(n=>`<li>${n}</li>`).join('') : '<li class="none">No one yet</li>'}</ul>
+      </div>
+    `;
+  }
+
+  document.getElementById('upcomingGrid').innerHTML =
+    block('Power 30 · July 1, 6pm w/ Coach Angie', power30) +
+    block('Connected Chef · July 9, 10am–1pm', connectedChef) +
+    block('Wants a 1-on-1 with HCCM', oneOnOne);
+}
+
+function detailHTML(r){
+  const fields = [
+    ['Home studio', r['Home Studio']],
+    ['Pre class', splitList(r['Pre Class']).join(', ') || '—'],
+    ['Core crew checklist', splitList(r['Core Crew Checklist']).join(', ') || '—'],
+    ['Machine & studio reset', splitList(r['Machine & Studio Reset']).join(', ') || '—'],
+    ['Lobby & front desk reset', splitList(r['Lobby & Front Desk Reset']).join(', ') || '—'],
+    ['Barriers', r['Barriers'] || '—'],
+    ['Support needed', r['Support Needed'] || '—'],
+    ['Saw a teammate show up', r['Saw Teammate Show Up'] || '—'],
+    ['HCCM class comp', r['HCCM Class Comp'] || '—'],
+    ['Other notes', r['Other Notes'] || '—'],
+  ];
+  return `<div class="detail-inner">${fields.map(([label,val]) => `<strong>${label}</strong>${val}`).join('')}</div>`;
+}
+
+function renderRoster(rows){
+  const sorted = [...rows].sort((a,b) => new Date(b.Timestamp) - new Date(a.Timestamp));
+  const tbody = document.getElementById('rosterBody');
+
+  function draw(filtered){
+    tbody.innerHTML = filtered.map((r, i) => {
+      const score = parseInt(r['Support Scale (1-5)'], 10);
+      return `
+        <tr class="roster-row" data-idx="${i}">
+          <td><span class="chevron">▸</span></td>
+          <td>${r.Name || 'Unnamed'}</td>
+          <td><span class="pill ${rolePillClass(r.Role)}">${r.Role || '—'}</span></td>
+          <td>${r['Home Studio'] || '—'}</td>
+          <td>${formatDate(r.Timestamp)}</td>
+          <td>${!isNaN(score) ? `<span class="score-dot" style="background:${scoreColor(score)};">${score}</span>` : '—'}</td>
+          <td>${(r['Team Commitment']||'').startsWith('Yes') ? 'Committed' : 'Has questions'}</td>
+        </tr>
+        <tr class="detail-row" id="detail-${i}" style="display:none;"><td colspan="7">${detailHTML(r)}</td></tr>
+      `;
+    }).join('');
+
+    tbody.querySelectorAll('.roster-row').forEach(row => {
+      row.addEventListener('click', () => {
+        const idx = row.getAttribute('data-idx');
+        const detail = document.getElementById('detail-' + idx);
+        const chevron = row.querySelector('.chevron');
+        const isOpen = detail.style.display !== 'none';
+        detail.style.display = isOpen ? 'none' : 'table-row';
+        chevron.classList.toggle('open', !isOpen);
+      });
+    });
+  }
+
+  draw(sorted);
+
+  function applyFilters(){
+    const q = document.getElementById('searchInput').value.toLowerCase();
+    const role = document.getElementById('roleFilter').value;
+    const filtered = sorted.filter(r => {
+      const matchesSearch = !q || (r.Name||'').toLowerCase().includes(q) || (r['Home Studio']||'').toLowerCase().includes(q);
+      const matchesRole = !role || r.Role === role;
+      return matchesSearch && matchesRole;
+    });
+    draw(filtered);
+  }
+
+  document.getElementById('searchInput').addEventListener('input', applyFilters);
+  document.getElementById('roleFilter').addEventListener('change', applyFilters);
+}
+
+document.getElementById('refreshBtn').addEventListener('click', loadDashboardData);
+</script>
+
+</body>
+</html>
